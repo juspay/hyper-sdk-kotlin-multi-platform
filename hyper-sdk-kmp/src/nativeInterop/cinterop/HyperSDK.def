@@ -1,0 +1,7 @@
+# Kotlin bindings for HyperSDK's public Objective-C API, generated from the headers that
+# build.gradle.kts downloads. Nothing is linked here: the merchant's app links HyperSDK
+# itself (through CocoaPods or Swift Package Manager), and the final app link resolves it.
+language = Objective-C
+headers = HyperSDK/HyperSDK.h
+headerFilter = HyperSDK/**
+package = in.juspay.hypersdk.kmp.interop

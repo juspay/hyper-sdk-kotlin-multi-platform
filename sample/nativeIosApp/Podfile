@@ -1,0 +1,15 @@
+platform :ios, '15.3'
+
+target 'iosApp' do
+  use_frameworks!
+  pod 'HyperSDK', '2.2.9.7'
+end
+
+post_install do |installer|
+  # Downloads the assets for the clientId in MerchantConfig.txt into the HyperSDK framework
+  fuse_path = "./Pods/HyperSDK/Fuse.rb"
+  clean_assets = true
+  if File.exist?(fuse_path)
+    system("ruby", fuse_path.to_s, clean_assets.to_s)
+  end
+end

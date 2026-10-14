@@ -1,0 +1,32 @@
+PODS:
+  - Airborne (0.43.4)
+  - HyperCore (1.0.7)
+  - HyperSDK (2.2.9.7):
+    - HyperSDK/Full (= 2.2.9.7)
+  - HyperSDK/Core (2.2.9.7):
+    - Airborne (= 0.43.4)
+    - HyperCore (= 1.0.7)
+  - HyperSDK/Full (2.2.9.7):
+    - HyperSDK/Core
+    - JuspaySafeBrowser (= 0.1.94)
+  - JuspaySafeBrowser (0.1.94)
+
+DEPENDENCIES:
+  - HyperSDK (= 2.2.9.7)
+
+SPEC REPOS:
+  trunk:
+    - Airborne
+    - HyperCore
+    - HyperSDK
+    - JuspaySafeBrowser
+
+SPEC CHECKSUMS:
+  Airborne: 44174c0a1491dda1e0b8f56a57eae3142a913ba1
+  HyperCore: 08a0f3a7cc78cc713165f8557b4303aa2ba8a111
+  HyperSDK: dafa2ef37aaad291b42621a48e834c32a7702ffd
+  JuspaySafeBrowser: 8141eb92fe4d77da997907a0c5eadc0616bce2fa
+
+PODFILE CHECKSUM: 096c29364945fd2824e0e13575e9b73f64668e88
+
+COCOAPODS: 1.17.0

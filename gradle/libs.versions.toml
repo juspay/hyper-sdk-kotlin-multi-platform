@@ -1,0 +1,30 @@
+[versions]
+hyper-sdk-kmp = "0.1.0"
+kotlin = "2.4.10"
+agp = "9.2.1"
+compose-multiplatform = "1.11.1"
+androidx-activity = "1.13.0"
+# 1.8.x is the last fragment line with minSdk 21, which the core module promises
+androidx-fragment = "1.8.8"
+androidx-startup = "1.1.1"
+# HyperSDK for Android that the wrapper compiles against; merchants pick the runtime version in hypersdk.plugin
+hypersdk-android = "2.2.8"
+hypersdk-plugin = "2.2.15"
+android-compileSdk = "36"
+android-targetSdk = "36"
+android-minSdk = "21"
+sample-minSdk = "24"
+
+[libraries]
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
+androidx-fragment = { module = "androidx.fragment:fragment", version.ref = "androidx-fragment" }
+androidx-startup-runtime = { module = "androidx.startup:startup-runtime", version.ref = "androidx-startup" }
+hypersdk-android = { module = "in.juspay:hypersdk", version.ref = "hypersdk-android" }
+
+[plugins]
+androidApplication = { id = "com.android.application", version.ref = "agp" }
+androidMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
+composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+hypersdkPlugin = { id = "hypersdk.plugin", version.ref = "hypersdk-plugin" }

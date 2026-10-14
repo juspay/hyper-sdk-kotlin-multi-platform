@@ -1,0 +1,23 @@
+.gradle/
+build/
+.kotlin/
+local.properties
+.idea/
+# Android Studio's Gradle daemon JDK choice
+gradle/gradle-daemon-jvm.properties
+*.iml
+.DS_Store
+
+# iOS samples
+sample/*/Pods/
+sample/*/*.xcworkspace/
+sample/*/*.xcodeproj/xcuserdata/
+sample/*/*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcuserstate
+
+# Sandbox merchant credentials for the sample (never commit)
+sample/sandbox-credentials.properties
+# Local iOS overrides for testing with your own merchant: Fuse reads these before MerchantConfig.txt
+sample/iosApp/MerchantConfig.json
+sample/nativeIosApp/MerchantConfig.json
+sample/spmIosApp/MerchantConfig.json
