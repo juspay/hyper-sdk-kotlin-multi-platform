@@ -1,0 +1,24 @@
+{
+  "originHash" : "09f75df01f8cec93a9fbdd7da5e24d996c980089fe1f0d4ccd1698a911d5aca1",
+  "pins" : [
+    {
+      "identity" : "hypercore-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/juspay/hypercore-ios.git",
+      "state" : {
+        "revision" : "da25db453a135ce3c98ae8f3021713103fdb26da",
+        "version" : "1.0.6"
+      }
+    },
+    {
+      "identity" : "hypersdk-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/juspay/hypersdk-ios.git",
+      "state" : {
+        "revision" : "d53bc7a71dd24cc23ceae92758e1a00dc065374a",
+        "version" : "2.2.9"
+      }
+    }
+  ],
+  "version" : 3
+}
