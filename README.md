@@ -178,7 +178,8 @@ when the screen leaves composition.
 
 Payloads and events are JSON strings in the exact shapes the HyperSDK docs describe, so
 the documented `initiate` and `process` payloads work unchanged. Parse `event.json` with
-whatever JSON library the app already uses.
+whatever JSON library the app already uses. Events can carry payment and customer details:
+keep `event.json` out of logs and don't show it as is in your UI.
 
 When the payment journey is done, you can call `hyperSdk.terminate()` to free the memory
 HyperSDK holds. This is optional.
@@ -232,7 +233,7 @@ HyperSDK holds. This is optional.
 ## Samples
 
 `sample/` holds two apps. Both initiate HyperSDK, open the payment page for a signed ₹1 order,
-and log every event:
+and show every event's JSON on screen, for debugging only:
 
 - **Compose Multiplatform** (`shared` + `androidApp` + `iosApp`): the UI is shared Compose
   code, and the screen creates the session with `HyperSdk()` when Initiate is tapped.

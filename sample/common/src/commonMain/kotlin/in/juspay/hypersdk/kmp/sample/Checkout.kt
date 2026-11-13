@@ -14,8 +14,12 @@ class Checkout(private val hyperSdk: HyperSdk, private val onEvent: (String) -> 
         get() = hyperSdk.isInitialised
 
     fun initiate() {
-        hyperSdk.initiate(SamplePayloads.initiate()) { event ->
-            onEvent("${event.name}  ${event.json}")
+        try {
+            hyperSdk.initiate(SamplePayloads.initiate()) { event ->
+                onEvent("${event.name}  ${event.json}")
+            }
+        } catch (e: Exception) {
+            onEvent("error  ${e.message}")
         }
     }
 
