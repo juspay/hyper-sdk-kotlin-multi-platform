@@ -6,6 +6,7 @@ import java.util.zip.ZipInputStream
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidMultiplatformLibrary)
+    alias(libs.plugins.vanniktechMavenPublish)
 }
 
 group = "in.juspay"
@@ -79,6 +80,8 @@ kotlin {
                 "-F${iosFrameworksDir}/HyperCore.xcframework/$slice",
             )
         }
+        // Keeps the publisher's local paths out of the published klibs
+        target.compilerOptions.freeCompilerArgs.add("-Xklib-relative-path-base=${rootDir.absolutePath}")
     }
 
     android {
@@ -108,4 +111,43 @@ kotlin {
 
 tasks.matching { it.name.startsWith("cinteropHyperSDK") }.configureEach {
     dependsOn(downloadHyperSdkIosHeaders)
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+    // Maven Central rejects unsigned files; without a key, publishing to the local repository still works
+    if (providers.gradleProperty("signingInMemoryKey").isPresent) signAllPublications()
+    pom {
+        name.set("HyperSDK for Kotlin Multiplatform")
+        description.set("Kotlin Multiplatform wrapper for Juspay HyperSDK on Android and iOS")
+        url.set("https://github.com/juspay/hyper-sdk-kotlin-multi-platform")
+        licenses {
+            license {
+                name.set("GNU Affero General Public License v3.0 only")
+                url.set("https://www.gnu.org/licenses/agpl-3.0.txt")
+            }
+        }
+        developers {
+            developer {
+                name.set("Juspay")
+                email.set("developers@juspay.in")
+                organization.set("Juspay Technologies")
+                organizationUrl.set("https://juspay.io")
+            }
+        }
+        scm {
+            url.set("https://github.com/juspay/hyper-sdk-kotlin-multi-platform")
+            connection.set("scm:git:https://github.com/juspay/hyper-sdk-kotlin-multi-platform.git")
+            developerConnection.set("scm:git:ssh://git@github.com/juspay/hyper-sdk-kotlin-multi-platform.git")
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "local"
+            url = uri(rootProject.layout.buildDirectory.dir("maven-repo"))
+        }
+    }
 }

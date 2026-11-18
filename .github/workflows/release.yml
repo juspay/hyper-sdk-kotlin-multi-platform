@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    # Kotlin/Native needs Xcode to build the iOS targets
+    runs-on: macos-26
+    # Holds the Maven Central token and the signing key
+    environment: Production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+
+      - name: Check the tag matches the library version
+        run: |
+          version=$(sed -n 's/^hyper-sdk-kmp = "\(.*\)"$/\1/p' gradle/libs.versions.toml)
+          if [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME doesn't match hyper-sdk-kmp $version in gradle/libs.versions.toml"
+            exit 1
+          fi
+
+      - name: Publish to Maven Central
+        run: ./gradlew :hyper-sdk-kmp:publishAndReleaseToMavenCentral
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=${GITHUB_REF_NAME#v}
+          # This version's CHANGELOG section, without its heading
+          awk -v v="$version" '/^## /{ p = ($2 == v); next } p' CHANGELOG.md > notes.md
+          case $version in *-*) prerelease=--prerelease ;; esac
+          gh release create "$GITHUB_REF_NAME" --title "$version" --notes-file notes.md ${prerelease:-}

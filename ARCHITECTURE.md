@@ -32,7 +32,7 @@ hyper-sdk-kmp/                       Core library (in.juspay:hyper-sdk-kmp)
   src/iosMain/.../HyperSdk.ios.kt    iOS factories and implementation over HyperSDK's Objective-C API
   src/nativeInterop/cinterop/HyperSDK.def
                                      Tells Kotlin which HyperSDK headers to generate bindings from
-  build.gradle.kts                   Targets, header download, bindings, Android settings
+  build.gradle.kts                   Targets, header download, bindings, Android settings, publishing
 
 sample/                              Demo apps (Juspay's demo clientId geddit by default)
   common/                            Non-UI sample code shared by every sample app
@@ -46,6 +46,7 @@ sample/                              Demo apps (Juspay's demo clientId geddit by
                                      Template for the gitignored sample signing key file
   LICENSE-KMP-App-Template           Apache 2.0 license of the parts taken from KMP-App-Template
 
+.github/workflows/release.yml        Publishes a pushed v<version> tag to Maven Central and creates its GitHub release
 gradle/libs.versions.toml            Library version, Gradle dependency and plugin versions, Android SDK levels
 settings.gradle.kts                  Module list and repositories
 build.gradle.kts                     Declares the Gradle plugins (applied per module)
@@ -189,6 +190,7 @@ Other choices in the iOS implementation:
 | `android { aarMetadata { minCompileSdk = 34 } }` | Without it the AAR would demand our own compileSdk (36) from every merchant |
 | `api(androidx.fragment 1.8.8)` | `FragmentActivity` is in the public API. 1.8.x is the last fragment line supporting minSdk 21 |
 | `implementation(androidx.startup 1.1.1)` | Runs the `CurrentActivity` initializer at app start; most AndroidX apps already include it |
+| `mavenPublishing` | Maven Central through the vanniktech plugin, with the POM fields Central requires (URL, license, developer, SCM). It signs only when a signing key is set, so publishing to `build/maven-repo` for local testing works without one |
 
 ## Samples
 
@@ -243,7 +245,7 @@ to also be a KMP module. Each activity extends `FragmentActivity` and declares
 
 | File | Notable contents |
 |---|---|
-| `gradle/libs.versions.toml` | The library version (`hyper-sdk-kmp`, 0.1.0), Kotlin 2.4.10, Compose Multiplatform 1.11.1 (samples only), AGP 9.2.1, HyperSDK Android 2.2.8 and iOS 2.2.9 (HyperCore follows HyperSDK's own pin), hypersdk.plugin 2.2.15, compileSdk/targetSdk 36, minSdk 21 (library) / 24 (samples). Not here: the samples' HyperSDK iOS pins (the Podfiles, the SPM project) and the Gradle version (`gradle/wrapper/gradle-wrapper.properties`) |
+| `gradle/libs.versions.toml` | The library version (`hyper-sdk-kmp`, 0.1.0), Kotlin 2.4.10, Compose Multiplatform 1.11.1 (samples only), AGP 9.2.1, HyperSDK Android 2.2.8 and iOS 2.2.9 (HyperCore follows HyperSDK's own pin), hypersdk.plugin 2.2.15, the Maven Central publishing plugin (vanniktech) 0.37.0, compileSdk/targetSdk 36, minSdk 21 (library) / 24 (samples). Not here: the samples' HyperSDK iOS pins (the Podfiles, the SPM project) and the Gradle version (`gradle/wrapper/gradle-wrapper.properties`) |
 | `settings.gradle.kts` | Juspay's Maven repository, for HyperSDK and Juspay's Gradle plugin. The root project is named `hyper-sdk-kmp-root` because a root named like the `:hyper-sdk-kmp` module breaks Gradle's type-safe project accessors |
 | `gradle.properties` | `kotlin.mpp.enableCInteropCommonization=true` lets the shared `iosMain` code see the HyperSDK bindings. Only this build needs it; consumers don't |
 
@@ -252,9 +254,46 @@ Compose Multiplatform 1.11.1 for the samples). Kotlin libraries are not forward 
 library built with a newer Kotlin can't be used by an app on an older one. Building with
 the template's versions keeps the library usable by any project created from it.
 
+## Publishing
+
+```sh
+./gradlew publishAllPublicationsToLocalRepository   # writes to build/maven-repo
+```
+
+The library publishes a root publication plus one per target: an Android AAR and one klib
+per iOS target, plus `-cinterop-HyperSDK.klib` per iOS target, which consumers get
+automatically. Publishing needs a Mac with Xcode, because the iOS targets are
+compiled with Kotlin/Native.
+
+Releases go to Maven Central under Juspay's `in.juspay` namespace, through the
+`com.vanniktech.maven.publish` plugin. Pushing a `v<version>` tag runs
+`.github/workflows/release.yml` on a macOS runner. It stops if the tag doesn't match the
+version catalog, signs and uploads every publication, waits for Central to validate them
+(`publishAndReleaseToMavenCentral`), and then creates the GitHub release from that version's
+CHANGELOG section, as a prerelease for versions like `1.2.3-rc.1`. Central releases are
+permanent: a mistake needs a new version. If the run fails before Central publishes, delete
+the tag, fix the problem and tag again; if only the GitHub release step fails, create the
+release by hand.
+
+One-time setup on GitHub:
+
+- An environment named `Production`, limited to `v*` tags and with required reviewers. It holds
+  `MAVEN_CENTRAL_USERNAME` and `MAVEN_CENTRAL_PASSWORD` (a Central Portal user token from an
+  account with the `in.juspay` namespace, not its login password), `SIGNING_KEY` (the
+  ASCII-armored private key, whose public key must be on a public keyserver) and
+  `SIGNING_KEY_PASSWORD`. The token can publish anything under `in.juspay`, so only this
+  environment should hold it.
+- A tag ruleset, so only maintainers can create, move or delete `v*` tags.
+
+To inspect a release before it goes out, upload it without publishing: set those four values
+as `ORG_GRADLE_PROJECT_mavenCentralUsername`, `ORG_GRADLE_PROJECT_mavenCentralPassword`,
+`ORG_GRADLE_PROJECT_signingInMemoryKey` and `ORG_GRADLE_PROJECT_signingInMemoryKeyPassword`,
+run `./gradlew :hyper-sdk-kmp:publishToMavenCentral`, check the deployment on
+central.sonatype.com, then drop it there.
+
 ## Checking a change
 
-1. `./gradlew :hyper-sdk-kmp:assemble`
+1. `./gradlew :hyper-sdk-kmp:assemble publishAllPublicationsToLocalRepository`
 2. Android: `./gradlew :sample:androidApp:installDebug` (and `:sample:nativeAndroidApp:installDebug`),
    then tap **Initiate** and **Pay ₹1.00**; with a sandbox merchant's credentials in place, the
    payment page should open.
@@ -264,13 +303,20 @@ the template's versions keeps the library usable by any project created from it.
    simulator, same taps.
 5. For a full sandbox payment: Netbanking → Axis → choose `CHARGED` on the bank simulator →
    Submit. `process_result` should report `charged`.
+6. What merchants get: the samples use the library as a project dependency inside this
+   build, so they don't exercise the published artifacts. When publishing or the bindings
+   change, also build a separate KMP project that adds `build/maven-repo` as a repository,
+   depends on `in.juspay:hyper-sdk-kmp`, does **not** set the
+   cinterop-commonization flag, calls `HyperSdk(...)` from `iosMain`, and links its static
+   iOS framework.
 
 The sample payment needs `sample/sandbox-credentials.properties`; see the `.example` file.
 
 ## Common changes
 
 - **Releasing:** bump `hyper-sdk-kmp` in the version catalog (it sets the library's version),
-  update the versions in the README's dependency snippets, and date the CHANGELOG heading.
+  update the versions in the README's dependency snippets, date the CHANGELOG heading, commit
+  and push to `main`, then tag that commit `v<version>` and push the tag (see Publishing).
 - **New HyperSDK Android version:** bump `hypersdk-android` in the version catalog (the
   compile-time API and the samples' runtime). Update the compile-against version in the
   CHANGELOG and this file, and the README's minimum if the wrapper starts using a newer API.

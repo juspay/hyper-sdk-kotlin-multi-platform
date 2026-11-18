@@ -2,6 +2,7 @@
 hyper-sdk-kmp = "0.1.0"
 kotlin = "2.4.10"
 agp = "9.2.1"
+vanniktech-maven-publish = "0.37.0"
 compose-multiplatform = "1.11.1"
 androidx-activity = "1.13.0"
 # 1.8.x is the last fragment line with minSdk 21, which the core module promises
@@ -30,3 +31,4 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 hypersdkPlugin = { id = "hypersdk.plugin", version.ref = "hypersdk-plugin" }
+vanniktechMavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "vanniktech-maven-publish" }

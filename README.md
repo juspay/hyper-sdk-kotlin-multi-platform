@@ -49,7 +49,7 @@ A dynamic Kotlin framework (`isStatic = false`) works too, but its link step the
 HyperSDK as well: add `linkerOpts("-F<path to the HyperSDK.xcframework slice>", "-framework", "HyperSDK")`
 for each iOS target.
 
-Add Juspay's Maven repository wherever your dependencies are resolved:
+The library and HyperSDK are on Juspay's Maven repository. Add it wherever your dependencies are resolved:
 
 ```kotlin
 maven("https://maven.juspay.in/jp-build-packages/hyper-sdk/")
@@ -141,6 +141,9 @@ The pre-action is part of the scheme, so share the scheme (it is stored in
 Create a session, then call `initiate` and `process`:
 
 ```kotlin
+import `in`.juspay.hypersdk.kmp.HyperSdk
+import `in`.juspay.hypersdk.kmp.HyperSdkEvents
+
 val hyperSdk = HyperSdk()
 
 hyperSdk.initiate(initiatePayloadJson) { event ->
@@ -161,9 +164,16 @@ body, which runs again on every recomposition.
 If your platform code creates the session, it can pass the screen instead of calling
 `HyperSdk()`:
 
-- Android: `HyperSdk(activity)`, with the `FragmentActivity` to show the payment UI in, and
-  optionally `clientId`, `tenantId` or `container`.
-- iOS: `HyperSdk(viewController)`, with the `UIViewController` to present from.
+- Android: `HyperSdk(activity)` (same import), with the `FragmentActivity` to show the payment
+  UI in, and optionally `clientId`, `tenantId` or `container`.
+- iOS: `HyperSdk(viewController)`, with the `UIViewController` to present from. From Swift,
+  import the framework by its `baseName` and call it with `try`:
+
+    ```swift
+    import Shared
+
+    let hyperSdk = try HyperSdk_iosKt.HyperSdk(viewController: viewController, clientId: nil, tenantId: nil)
+    ```
 
 If that code is in the Android app module or in Swift, it needs the setup in step 1.
 
@@ -199,10 +209,11 @@ HyperSDK holds. This is optional.
   process, or if the app removes androidx.startup's `InitializationProvider`
   (`tools:node="remove"`), call
   `AppInitializer.getInstance(application).initializeComponent(CurrentActivityInitializer::class.java)`
-  in `Application.onCreate`, or pass the activity to `HyperSdk(activity)`. On iOS the main
-  window is the foreground scene's visible, normal-level window, preferring the key one; apps
-  with several windows (iPad multi-window) should pass the controller to
-  `HyperSdk(viewController)`.
+  in `Application.onCreate` (imports `androidx.startup.AppInitializer` and
+  `` `in`.juspay.hypersdk.kmp.CurrentActivityInitializer ``), or pass the activity to
+  `HyperSdk(activity)`. On iOS the main window is the foreground scene's visible, normal-level
+  window, preferring the key one; apps with several windows (iPad multi-window) should pass the
+  controller to `HyperSdk(viewController)`.
 - **Threads.** Create the session on the main thread. After that, `initiate`, `process`,
   `terminate` and `isInitialised` can be called from any thread, and events arrive on the main
   thread. On iOS every call runs on the main thread: a caller on another thread waits until it
